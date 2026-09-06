@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Kombin Defteri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFE8DA;
+    --card:#FBF7EF;
+    --ink:#2A241C;
+    --ink-soft:#6B6255;
+    --leather:#7C4A2D;
+    --thread:#C68A2E;
+    --sage:#6F7F5E;
+    --line:#DED3BE;
+    --danger:#A6432F;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Public Sans',sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1,h2,h3,.serif{font-family:'Fraunces',serif;}
+  button{font-family:inherit;}
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    background:var(--paper);
+    position:relative;
+  }
+  #app-header{
+    padding:18px 20px 12px;
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  #app-header h1{
+    margin:0;
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  #app-header p{
+    margin:4px 0 0;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  #app-main{
+    flex:1;
+    overflow-y:auto;
+    padding:16px 16px 90px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .view{display:none;}
+  .view.active{display:block; animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  #tab-bar{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    display:flex;
+    background:var(--card);
+    border-top:1px solid var(--line);
+    padding:6px 4px calc(env(safe-area-inset-bottom,0px) + 6px);
+    flex-shrink:0;
+  }
+  .tab-btn{
+    flex:1;
+    background:none;
+    border:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    padding:6px 2px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    border-radius:10px;
+  }
+  .tab-btn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+  .tab-btn span{font-size:10.5px;font-weight:600;}
+  .tab-btn.active{color:var(--leather);}
+
+  .section-title{
+    font-size:18px;
+    font-weight:600;
+    margin:2px 0 14px;
+  }
+
+  /* buttons */
+  .btn{
+    font-size:13.5px;
+    font-weight:600;
+    padding:10px 16px;
+    border-radius:10px;
+    border:1px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper);
+    cursor:pointer;
+  }
+  .btn.secondary{background:transparent; color:var(--ink); border:1px solid var(--line);}
+  .btn.gold{background:var(--thread); border-color:var(--thread); color:#2A1F0B;}
+  .btn.danger{background:transparent; color:var(--danger); border-color:var(--danger);}
+  .btn:disabled{opacity:.4; cursor:not-allowed;}
+  .btn-row{display:flex; gap:8px; flex-wrap:wrap;}
+
+  .empty-state{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--ink-soft);
+  }
+  .empty-state p{font-size:14px; line-height:1.5; margin:0 0 16px;}
+
+  /* garment-tag card */
+  .tag-card{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:10px;
+    box-shadow:0 1px 0 rgba(42,36,28,.03);
+  }
+  .tag-hole{
+    position:absolute;
+    top:10px; left:10px;
+    width:9px; height:9px;
+    border-radius:50%;
+    border:1.6px solid var(--ink-soft);
+    background:var(--paper);
+    z-index:2;
+  }
+  .wardrobe-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .wardrobe-card img{
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:cover;
+    border-radius:8px;
+    display:block;
+    margin-top:6px;
+  }
+  .wardrobe-card .name{
+    font-size:13px;
+    font-weight:600;
+    margin-top:8px;
+    padding-left:2px;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:10.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-top:4px;
+    padding-left:2px;
+  }
+  .pill .dot{width:6px;height:6px;border-radius:50%;}
+  .card-x{
+    position:absolute;
+    top:8px; right:8px;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--paper);
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    z-index:2;
+  }
+  .add-tile{
+    border:1.6px dashed var(--line);
+    border-radius:14px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    aspect-ratio:1/1.28;
+    color:var(--ink-soft);
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .add-tile svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+
+  /* profile */
+  .profile-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  .profile-card{position:relative; cursor:pointer;}
+  .profile-card img{width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:12px; border:2px solid transparent; display:block;}
+  .profile-card.active img{border-color:var(--sage);}
+  .profile-check{
+    position:absolute; bottom:6px; right:6px;
+    width:20px;height:20px;border-radius:50%;
+    background:var(--sage); color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;
+  }
+
+  /* builder */
+  #builder-canvas-wrap{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+  }
+  #builder-canvas{
+    position:relative;
+    width:100%;
+    aspect-ratio:3/4;
+    overflow:hidden;
+    background:
+      linear-gradient(45deg, #00000006 25%, transparent 25%),
+      linear-gradient(-45deg, #00000006 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #00000006 75%),
+      linear-gradient(-45deg, transparent 75%, #00000006 75%);
+    background-size:20px 20px;
+    background-position:0 0,0 10px,10px -10px,-10px 0px;
+    touch-action:none;
+  }
+  #builder-canvas img.bg-photo{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:contain;
+    pointer-events:none;
+    user-select:none;
+  }
+  .placed-item{
+    position:absolute;
+    touch-action:none;
+    user-select:none;
+  }
+  .placed-item img{width:100%; height:auto; display:block; pointer-events:none; user-select:none;}
+  .placed-item .frame{
+    position:absolute; inset:-3px;
+    border:2px dashed transparent;
+    border-radius:4px;
+  }
+  .placed-item.selected .frame{border-color:var(--ink);}
+  .placed-item .handle{
+    position:absolute;
+    right:-11px; bottom:-11px;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--thread);
+    border:2px solid var(--card);
+    opacity:0;
+    pointer-events:none;
+  }
+  .placed-item.selected .handle{opacity:1; pointer-events:auto; cursor:grab;}
+
+  #builder-toolbar{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:10px; gap:8px;
+  }
+  #item-toolbar{
+    display:flex; gap:6px;
+  }
+  .icon-btn{
+    width:32px;height:32px;border-radius:50%;
+    border:1px solid var(--line); background:var(--card);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .icon-btn svg{width:15px;height:15px;stroke:var(--ink);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+
+  #builder-strip{
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    padding:14px 2px 4px;
+  }
+  #builder-strip .strip-item{
+    flex-shrink:0;
+    width:64px;
+    text-align:center;
+    cursor:pointer;
+  }
+  #builder-strip img{
+    width:64px;height:64px;object-fit:cover;
+    border-radius:10px;border:1px solid var(--line);
+    background:var(--card);
+  }
+  #builder-strip .strip-item span{
+    display:block; font-size:9.5px; color:var(--ink-soft);
+    margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  #profile-switch-strip{display:flex; gap:8px; margin-bottom:12px; overflow-x:auto;}
+  #profile-switch-strip img{width:44px;height:58px;object-fit:cover;border-radius:8px; border:2px solid transparent; flex-shrink:0;}
+  #profile-switch-strip img.active{border-color:var(--sage);}
+
+  /* saved */
+  .saved-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .saved-card img{width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:9px; display:block;}
+  .saved-card .name{font-size:13px; font-weight:600; margin-top:8px; padding-left:2px;}
+  .saved-card .date{font-size:10.5px; color:var(--ink-soft); padding-left:2px;}
+
+  /* modal */
+  .overlay{
+    position:absolute; inset:0;
+    background:rgba(42,36,28,.45);
+    display:flex; align-items:flex-end;
+    z-index:50;
+  }
+  .sheet{
+    background:var(--card);
+    width:100%;
+    border-radius:20px 20px 0 0;
+    padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 20px);
+    max-height:85vh;
+    overflow-y:auto;
+  }
+  .sheet h3{margin:0 0 14px; font-size:17px; font-weight:600;}
+  .sheet img.preview{width:100%; max-height:220px; object-fit:contain; border-radius:10px; margin-bottom:14px;
+    background:
+      linear-gradient(45deg, #00000009 25%, transparent 25%),
+      linear-gradient(-45deg, #00000009 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #00000009 75%),
+      linear-gradient(-45deg, transparent 75%, #00000009 75%);
+    background-size:16px 16px;
+    background-position:0 0,0 8px,8px -8px,-8px 0px;
+    background-color:var(--paper);
+  }
+  .preview-wrap{position:relative; margin-bottom:6px;}
+  .preview-wrap img.preview{margin-bottom:0;}
+  .bg-processing-overlay{
+    position:absolute; inset:0;
+    background:rgba(239,232,218,.88);
+    border-radius:10px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+    font-size:12px; font-weight:600; color:var(--ink-soft);
+  }
+  .spinner{
+    width:20px; height:20px; border-radius:50%;
+    border:2.5px solid var(--line);
+    border-top-color:var(--leather);
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .bg-toggle-row{
+    display:flex; align-items:center; gap:8px;
+    font-size:12.5px; font-weight:600; color:var(--ink-soft);
+    margin:0 0 14px;
+  }
+  .bg-toggle-row input{width:15px; height:15px; accent-color:var(--sage);}
+  .field-label{font-size:11.5px; font-weight:600; color:var(--ink-soft); margin:14px 0 6px;}
+  .field-label:first-of-type{margin-top:0;}
+  input[type=text]{
+    width:100%; padding:11px 12px; border-radius:10px;
+    border:1px solid var(--line); background:var(--paper);
+    font-size:14px; font-family:inherit; color:var(--ink);
+  }
+  .cat-pills{display:flex; flex-wrap:wrap; gap:7px;}
+  .cat-pill-btn{
+    padding:7px 12px; border-radius:20px; font-size:12.5px; font-weight:600;
+    border:1px solid var(--line); background:var(--paper); color:var(--ink-soft); cursor:pointer;
+  }
+  .cat-pill-btn.selected{border-color:var(--ink); color:var(--ink); background:#fff;}
+  .sheet .btn-row{margin-top:18px;}
+  .sheet .btn{flex:1;}
+
+  #saved-detail img{width:100%; border-radius:14px; display:block; margin-bottom:14px;}
+
+  #toast{
+    position:absolute;
+    left:50%; bottom:86px;
+    transform:translateX(-50%) translateY(10px);
+    background:var(--ink); color:var(--paper);
+    padding:10px 18px; border-radius:30px;
+    font-size:12.5px; font-weight:600;
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:60;
+    white-space:nowrap;
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .hidden-input{display:none;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header id="app-header">
+    <h1 class="serif">Kombin Defteri</h1>
+    <p>Gardırobunu dijitalleştir, kendi fotoğrafınla kombinle.</p>
+  </header>
+
+  <main id="app-main">
+
+    <!-- GARDIROP -->
+    <section class="view active" id="view-wardrobe">
+      <div class="section-title serif">Gardırobum</div>
+      <div id="wardrobe-content"></div>
+    </section>
+
+    <!-- PROFİL -->
+    <section class="view" id="view-profile">
+      <div class="section-title serif">Ben</div>
+      <div id="profile-content"></div>
+    </section>
+
+    <!-- KOMBİN -->
+    <section class="view" id="view-builder">
+      <div class="section-title serif">Kombin Oluştur</div>
+      <div id="builder-content"></div>
+    </section>
+
+    <!-- KOMBİNLERİM -->
+    <section class="view" id="view-saved">
+      <div class="section-title serif">Kombinlerim</div>
+      <div id="saved-content"></div>
+    </section>
+
+  </main>
+
+  <nav id="tab-bar">
+    <button class="tab-btn active" data-view="wardrobe">
+      <svg viewBox="0 0 24 24"><path d="M12 4a1.6 1.6 0 1 1 1.6 1.6"/><path d="M12 5.6v1.6"/><path d="M12 8.2 3.4 13.4c-.6.35-.9.9-.9 1.5 0 .45.4.8.9.8h17.2c.5 0 .9-.35.9-.8 0-.6-.3-1.15-.9-1.5L12 8.2Z"/></svg>
+      <span>Gardırop</span>
+    </button>
+    <button class="tab-btn" data-view="profile">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>
+      <span>Ben</span>
+    </button>
+    <button class="tab-btn" data-view="builder">
+      <svg viewBox="0 0 24 24"><path d="M8.2 4 4.4 7l2 3 1.9-1.3V20h7.4V8.7L17.6 10l2-3L15.8 4l-2 1.6a3 3 0 0 1-3.6 0L8.2 4Z"/></svg>
+      <span>Kombin</span>
+    </button>
+    <button class="tab-btn" data-view="saved">
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.3"/><rect x="13" y="4" width="7" height="7" rx="1.3"/><rect x="4" y="13" width="7" height="7" rx="1.3"/><rect x="13" y="13" width="7" height="7" rx="1.3"/></svg>
+      <span>Kombinlerim</span>
+    </button>
+  </nav>
+
+  <div id="toast"></div>
+  <div id="modal-slot"></div>
+</div>
+
+<canvas id="composite-canvas" style="display:none;"></canvas>
+<input type="file" accept="image/*" id="wardrobe-file-input" class="hidden-input">
+<input type="file" accept="image/*" id="profile-file-input" class="hidden-input">
+
+<script>
+/* ---------------- state ---------------- */
+let wardrobe = [];   // {id,name,category,img,aspect}
+let profiles = [];   // {id,name,img}
+let activeProfileId = null;
+let outfits = [];    // {id,name,profileImg,items:[...],thumb,createdAt}
+
+let builder = { profileImg:null, items:[], editingOutfitId:null, selectedItemId:null };
+let zCounter = 1;
+let pendingWardrobeImage = null; // {dataUrl,aspect} awaiting the add-item sheet
+
+const CATEGORIES = ['Üst','Alt','Elbise','Dış Giyim','Ayakkabı','Aksesuar'];
+const CAT_COLORS = {'Üst':'#7C4A2D','Alt':'#C68A2E','Elbise':'#6F7F5E','Dış Giyim':'#4C6B63','Ayakkabı':'#5B6B8C','Aksesuar':'#A65C57'};
+// Otomatik yerleşim: vücutta o kategorinin genelde durduğu yer (yüzde, 3:4 boy fotoğrafı varsayımıyla)
+const CAT_DEFAULTS = {
+  'Üst':        { yPct:33, widthPct:46, z:2 },
+  'Dış Giyim':  { yPct:34, widthPct:52, z:3 },
+  'Elbise':     { yPct:46, widthPct:48, z:2 },
+  'Alt':        { yPct:66, widthPct:40, z:1 },
+  'Ayakkabı':   { yPct:90, widthPct:24, z:1 },
+  'Aksesuar':   { yPct:19, widthPct:16, z:4 },
+};
+function defaultPlacement(category){
+  return CAT_DEFAULTS[category] || { yPct:55, widthPct:42, z:1 };
+}
+
+const imgCache = new Map();
+
+/* ---------------- storage helpers ---------------- */
+async function storeGet(key, fallback){
+  try{
+    if(!window.storage) return fallback;
+    const r = await window.storage.get(key, false);
+    return r && r.value ? JSON.parse(r.value) : fallback;
+  }catch(e){ return fallback; }
+}
+async function storeSet(key, value){
+  try{
+    if(!window.storage) return;
+    await window.storage.set(key, JSON.stringify(value), false);
+  }catch(e){ console.warn('storage set failed', e); }
+}
+
+async function loadAll(){
+  wardrobe = await storeGet('wardrobe-items', []);
+  profiles = await storeGet('profile-photos', []);
+  outfits  = await storeGet('outfits', []);
+  activeProfileId = profiles.length ? profiles[0].id : null;
+  const savedActive = await storeGet('active-profile-id', null);
+  if(savedActive && profiles.some(p=>p.id===savedActive)) activeProfileId = savedActive;
+  zCounter = 1;
+}
+
+/* ---------------- utils ---------------- */
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function fmtDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString('tr-TR', {day:'numeric', month:'short'});
+}
+function loadImage(src){
+  if(imgCache.has(src)) return imgCache.get(src);
+  const p = new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+  imgCache.set(src, p);
+  return p;
+}
+/* ---------------- background removal (fully local canvas processing, no external network) ---------------- */
+// Flood-fills from the image edges, removing any region whose color is close
+// to the sampled edge/background color. Works well when the garment photo
+// has a fairly plain, solid-ish background (wall, table, sheet, product shot).
+function chromaKeyFloodFill(canvas, tolerance){
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const imgData = ctx.getImageData(0,0,w,h);
+  const data = imgData.data;
+  const idx = (x,y)=>(y*w+x)*4;
+
+  const seeds = [
+    [0,0],[w-1,0],[0,h-1],[w-1,h-1],
+    [Math.floor(w/2),0],[Math.floor(w/2),h-1],
+    [0,Math.floor(h/2)],[w-1,Math.floor(h/2)]
+  ];
+  let rSum=0,gSum=0,bSum=0;
+  seeds.forEach(([x,y])=>{ const i=idx(x,y); rSum+=data[i]; gSum+=data[i+1]; bSum+=data[i+2]; });
+  const refR = rSum/seeds.length, refG = gSum/seeds.length, refB = bSum/seeds.length;
+
+  const dist = (i)=>{
+    const dr=data[i]-refR, dg=data[i+1]-refG, db=data[i+2]-refB;
+    return Math.sqrt(dr*dr+dg*dg+db*db);
+  };
+
+  const visited = new Uint8Array(w*h);
+  const isBg = new Uint8Array(w*h);
+  const queue = new Int32Array(w*h);
+  let qHead=0, qTail=0;
+
+  seeds.forEach(([x,y])=>{
+    const p = y*w+x;
+    if(visited[p]) return;
+    visited[p]=1;
+    if(dist(idx(x,y)) <= tolerance){ isBg[p]=1; queue[qTail++]=p; }
+  });
+  while(qHead<qTail){
+    const p = queue[qHead++];
+    const x = p % w, y = (p - x)/w;
+    if(x>0){ const np=p-1; if(!visited[np]){ visited[np]=1; if(dist(idx(x-1,y))<=tolerance){ isBg[np]=1; queue[qTail++]=np; } } }
+    if(x<w-1){ const np=p+1; if(!visited[np]){ visited[np]=1; if(dist(idx(x+1,y))<=tolerance){ isBg[np]=1; queue[qTail++]=np; } } }
+    if(y>0){ const np=p-w; if(!visited[np]){ visited[np]=1; if(dist(idx(x,y-1))<=tolerance){ isBg[np]=1; queue[qTail++]=np; } } }
+    if(y<h-1){ const np=p+w; if(!visited[np]){ visited[np]=1; if(dist(idx(x,y+1))<=tolerance){ isBg[np]=1; queue[qTail++]=np; } } }
+  }
+  for(let p=0;p<w*h;p++){ if(isBg[p]) data[p*4+3] = 0; }
+  ctx.putImageData(imgData,0,0);
+}
+
+async function removeBgFromDataUrl(dataUrl, maxDim){
+  const img = await new Promise((resolve,reject)=>{
+    const im = new Image();
+    im.onload = ()=>resolve(im);
+    im.onerror = reject;
+    im.src = dataUrl;
+  });
+  let {width,height} = img;
+  if(width>height){ if(width>maxDim){ height = height*maxDim/width; width = maxDim; } }
+  else { if(height>maxDim){ width = width*maxDim/height; height = maxDim; } }
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(width); canvas.height = Math.round(height);
+  canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+  // let the spinner paint before the (synchronous) pixel work runs
+  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  chromaKeyFloodFill(canvas, 44);
+  return { dataUrl: canvas.toDataURL('image/png'), aspect: canvas.width/canvas.height };
+}
+
+function fileToCompressed(file, maxDim, quality){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let {width,height} = img;
+        if(width>height){ if(width>maxDim){ height = height*maxDim/width; width = maxDim; } }
+        else { if(height>maxDim){ width = width*maxDim/height; height = maxDim; } }
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(width); canvas.height = Math.round(height);
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        resolve({ dataUrl: canvas.toDataURL('image/jpeg', quality), aspect: canvas.width/canvas.height });
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------------- navigation ---------------- */
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  if(name==='wardrobe') renderWardrobe();
+  if(name==='profile') renderProfile();
+  if(name==='builder') renderBuilder();
+  if(name==='saved') renderSaved();
+}
+document.querySelectorAll('.tab-btn').forEach(b=>{
+  b.addEventListener('click', ()=>showView(b.dataset.view));
+});
+
+/* ---------------- modal sheet ---------------- */
+function openSheet(html){
+  const slot = document.getElementById('modal-slot');
+  slot.innerHTML = `<div class="overlay" id="active-overlay"><div class="sheet">${html}</div></div>`;
+  document.getElementById('active-overlay').addEventListener('click', e=>{
+    if(e.target.id==='active-overlay') closeSheet();
+  });
+}
+function closeSheet(){ document.getElementById('modal-slot').innerHTML=''; }
+
+/* ================= WARDROBE ================= */
+function renderWardrobe(){
+  const el = document.getElementById('wardrobe-content');
+  const tiles = wardrobe.map(item=>{
+    const rot = ((hashCode(item.id)%5)-2)*0.6;
+    return `<div class="tag-card wardrobe-card" style="transform:rotate(${rot}deg)">
+      <div class="tag-hole"></div>
+      <div class="card-x" data-del-wardrobe="${item.id}">✕</div>
+      <img src="${item.img}">
+      <div class="name">${escapeHtml(item.name)}</div>
+      <div class="pill"><span class="dot" style="background:${CAT_COLORS[item.category]||'#999'}"></span>${item.category}</div>
+    </div>`;
+  }).join('');
+  const addTile = `<div class="add-tile" id="add-wardrobe-tile">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Parça ekle
+    </div>`;
+  if(wardrobe.length===0){
+    el.innerHTML = `<div class="empty-state">
+        <p>Gardırobun henüz boş.<br>Bir kıyafetinin fotoğrafını çekerek başla.</p>
+        <button class="btn gold" id="add-wardrobe-tile">Fotoğraf çek / seç</button>
+      </div>`;
+  } else {
+    el.innerHTML = `<div class="wardrobe-grid">${addTile}${tiles}</div>`;
+  }
+  document.getElementById('add-wardrobe-tile').addEventListener('click', ()=>{
+    document.getElementById('wardrobe-file-input').value='';
+    document.getElementById('wardrobe-file-input').click();
+  });
+  el.querySelectorAll('[data-del-wardrobe]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      if(!confirm('Bu parçayı gardıroptan silmek istiyor musun?')) return;
+      wardrobe = wardrobe.filter(w=>w.id!==b.dataset.delWardrobe);
+      await storeSet('wardrobe-items', wardrobe);
+      renderWardrobe();
+    });
+  });
+}
+function hashCode(str){ let h=0; for(let i=0;i<str.length;i++){ h = (h*31+str.charCodeAt(i))|0; } return Math.abs(h); }
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+let pendingWardrobeOriginal = null;
+let pendingWardrobeRemoved = null;
+let bgRemovalUseResult = true;
+
+document.getElementById('wardrobe-file-input').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  showToast('Fotoğraf işleniyor…');
+  const {dataUrl, aspect} = await fileToCompressed(file, 1000, 0.85);
+  pendingWardrobeOriginal = {dataUrl, aspect};
+  pendingWardrobeRemoved = null;
+  bgRemovalUseResult = true;
+  pendingWardrobeImage = pendingWardrobeOriginal;
+  openAddWardrobeSheet();
+  runAutoBgRemoval();
+});
+
+async function runAutoBgRemoval(){
+  const overlay = document.getElementById('bg-processing-overlay');
+  try{
+    const result = await removeBgFromDataUrl(pendingWardrobeOriginal.dataUrl, 900);
+    pendingWardrobeRemoved = result;
+    if(bgRemovalUseResult) pendingWardrobeImage = pendingWardrobeRemoved;
+    const img = document.getElementById('wardrobe-preview-img');
+    if(img) img.src = pendingWardrobeImage.dataUrl;
+    const toggleRow = document.getElementById('bg-toggle-row');
+    if(toggleRow) toggleRow.style.display = 'flex';
+  } catch(err){
+    console.error('Arka plan kaldırma başarısız', err);
+    showToast('Arka plan kaldırılamadı, orijinal fotoğraf kullanılacak');
+  } finally {
+    if(overlay) overlay.remove();
+  }
+}
+
+function openAddWardrobeSheet(){
+  let selectedCat = CATEGORIES[0];
+  const pills = CATEGORIES.map(c=>`<button class="cat-pill-btn ${c===selectedCat?'selected':''}" data-cat="${c}">${c}</button>`).join('');
+  openSheet(`
+    <h3 class="serif">Parçayı kaydet</h3>
+    <div class="preview-wrap">
+      <img class="preview" id="wardrobe-preview-img" src="${pendingWardrobeImage.dataUrl}">
+      <div class="bg-processing-overlay" id="bg-processing-overlay">
+        <div class="spinner"></div>
+        <span>Arka plan kaldırılıyor…</span>
+      </div>
+    </div>
+    <label class="bg-toggle-row" id="bg-toggle-row" style="display:none;">
+      <input type="checkbox" id="bg-remove-toggle" checked>
+      <span>Arka planı kaldır</span>
+    </label>
+    <div class="field-label">Adı</div>
+    <input type="text" id="wardrobe-name-input" placeholder="Örn. Lacivert triko" value="">
+    <div class="field-label">Kategori</div>
+    <div class="cat-pills" id="cat-pills">${pills}</div>
+    <div class="btn-row">
+      <button class="btn secondary" id="cancel-wardrobe">Vazgeç</button>
+      <button class="btn gold" id="confirm-wardrobe">Gardırobuma ekle</button>
+    </div>
+  `);
+  document.getElementById('cat-pills').addEventListener('click', e=>{
+    const b = e.target.closest('.cat-pill-btn');
+    if(!b) return;
+    selectedCat = b.dataset.cat;
+    document.querySelectorAll('#cat-pills .cat-pill-btn').forEach(x=>x.classList.toggle('selected', x===b));
+  });
+  document.getElementById('bg-remove-toggle').addEventListener('change', e=>{
+    bgRemovalUseResult = e.target.checked;
+    pendingWardrobeImage = bgRemovalUseResult && pendingWardrobeRemoved ? pendingWardrobeRemoved : pendingWardrobeOriginal;
+    document.getElementById('wardrobe-preview-img').src = pendingWardrobeImage.dataUrl;
+  });
+  document.getElementById('cancel-wardrobe').addEventListener('click', closeSheet);
+  document.getElementById('confirm-wardrobe').addEventListener('click', async ()=>{
+    const name = document.getElementById('wardrobe-name-input').value.trim() || 'İsimsiz parça';
+    wardrobe.push({ id: uid(), name, category: selectedCat, img: pendingWardrobeImage.dataUrl, aspect: pendingWardrobeImage.aspect });
+    await storeSet('wardrobe-items', wardrobe);
+    pendingWardrobeImage = null;
+    pendingWardrobeOriginal = null;
+    pendingWardrobeRemoved = null;
+    closeSheet();
+    showToast('Gardıroba eklendi');
+    renderWardrobe();
+  });
+}
+
+/* ================= PROFILE ================= */
+function renderProfile(){
+  const el = document.getElementById('profile-content');
+  const cards = profiles.map(p=>`
+    <div class="profile-card ${p.id===activeProfileId?'active':''}" data-profile="${p.id}">
+      <img src="${p.img}">
+      ${p.id===activeProfileId?'<div class="profile-check">✓</div>':''}
+      <div class="card-x" data-del-profile="${p.id}" style="top:4px;right:4px;">✕</div>
+    </div>`).join('');
+  const addTile = `<div class="add-tile" style="aspect-ratio:3/4;" id="add-profile-tile">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Fotoğraf ekle
+    </div>`;
+  if(profiles.length===0){
+    el.innerHTML = `<div class="empty-state">
+      <p>Kombin kurabilmek için önce boydan bir fotoğrafını ekle.<br>Düz bir arka plan önünde, tüm vücudun görünecek şekilde olması en iyi sonucu verir.</p>
+      <button class="btn gold" id="add-profile-tile">Fotoğraf çek / seç</button>
+    </div>`;
+  } else {
+    el.innerHTML = `<div class="profile-grid">${addTile}${cards}</div>`;
+  }
+  document.getElementById('add-profile-tile').addEventListener('click', ()=>{
+    document.getElementById('profile-file-input').value='';
+    document.getElementById('profile-file-input').click();
+  });
+  el.querySelectorAll('[data-profile]').forEach(c=>{
+    c.addEventListener('click', async (e)=>{
+      if(e.target.closest('[data-del-profile]')) return;
+      activeProfileId = c.dataset.profile;
+      await storeSet('active-profile-id', activeProfileId);
+      renderProfile();
+    });
+  });
+  el.querySelectorAll('[data-del-profile]').forEach(b=>{
+    b.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      if(!confirm('Bu fotoğrafı silmek istiyor musun?')) return;
+      profiles = profiles.filter(p=>p.id!==b.dataset.delProfile);
+      if(activeProfileId===b.dataset.delProfile) activeProfileId = profiles.length?profiles[0].id:null;
+      await storeSet('profile-photos', profiles);
+      await storeSet('active-profile-id', activeProfileId);
+      renderProfile();
+    });
+  });
+}
+document.getElementById('profile-file-input').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  showToast('Fotoğraf işleniyor…');
+  const {dataUrl} = await fileToCompressed(file, 1100, 0.75);
+  const id = uid();
+  profiles.push({ id, name:'Fotoğraf '+(profiles.length+1), img:dataUrl });
+  activeProfileId = id;
+  await storeSet('profile-photos', profiles);
+  await storeSet('active-profile-id', activeProfileId);
+  showToast('Fotoğraf eklendi');
+  renderProfile();
+});
+
+/* ================= BUILDER ================= */
+function renderBuilder(){
+  const el = document.getElementById('builder-content');
+  if(!builder.profileImg){
+    const active = profiles.find(p=>p.id===activeProfileId);
+    if(active) builder.profileImg = active.img;
+  }
+  if(!builder.profileImg){
+    el.innerHTML = `<div class="empty-state">
+      <p>Kombin oluşturmak için önce "Ben" sekmesinden boy fotoğrafını ekle.</p>
+      <button class="btn gold" onclick="showView('profile')">Fotoğraf ekle</button>
+    </div>`;
+    return;
+  }
+  const profileSwitch = profiles.length>1 ? `<div id="profile-switch-strip">${
+    profiles.map(p=>`<img src="${p.img}" class="${p.img===builder.profileImg?'active':''}" data-switch-profile="${p.img}">`).join('')
+  }</div>` : '';
+
+  const stripItems = wardrobe.map(w=>`
+    <div class="strip-item" data-add-item="${w.id}">
+      <img src="${w.img}">
+      <span>${escapeHtml(w.name)}</span>
+    </div>`).join('') || `<p style="font-size:12.5px;color:var(--ink-soft);">Önce Gardırop sekmesinden parça ekle.</p>`;
+
+  el.innerHTML = `
+    <div id="builder-toolbar">
+      <div id="item-toolbar"></div>
+      <div class="btn-row" style="margin-left:auto;">
+        <button class="btn secondary" id="builder-clear">Temizle</button>
+        <button class="btn" id="builder-ai" style="background:#2f6f5e;color:#fff;">✨ AI ile Giydir</button><button class="btn secondary" id="builder-ai-settings" title="AI sunucu adresi">⚙️</button>
+        <button class="btn gold" id="builder-save">Kaydet</button>
+      </div>
+    </div>
+    ${profileSwitch}
+    <div id="builder-canvas-wrap">
+      <div id="builder-canvas">
+        <img class="bg-photo" src="${builder.profileImg}">
+      </div>
+    </div>
+    <div id="builder-strip">${stripItems}</div>
+    <p style="font-size:11.5px;color:var(--ink-soft);text-align:center;margin:8px 4px 0;">Bir parçaya dokun, kategorisine göre otomatik yerine otursun. Sonra sürükle, köşesinden boyutlandır.</p>
+  `;
+
+  document.getElementById('profile-switch-strip') && document.getElementById('profile-switch-strip').addEventListener('click', e=>{
+    const img = e.target.closest('[data-switch-profile]');
+    if(!img) return;
+    builder.profileImg = img.dataset.switchProfile;
+    renderBuilder();
+  });
+  document.getElementById('builder-clear').addEventListener('click', ()=>{
+    if(builder.items.length && !confirm('Tuvaldeki tüm parçalar kaldırılsın mı?')) return;
+    builder.items = [];
+    builder.selectedItemId = null;
+    builder.editingOutfitId = null;
+    renderBuilder();
+  });
+  document.getElementById('builder-save').addEventListener('click', openSaveOutfitSheet);
+  document.getElementById('builder-ai').addEventListener('click', runAITryOn);
+  document.getElementById('builder-ai-settings').addEventListener('click', setTryOnApiBase);
+  document.getElementById('builder-strip').addEventListener('click', e=>{
+    const t = e.target.closest('[data-add-item]');
+    if(!t) return;
+    const w = wardrobe.find(x=>x.id===t.dataset.addItem);
+    if(!w) return;
+    const pos = defaultPlacement(w.category);
+    // Aynı kategoriden zaten tuvalde bir parça varsa üstüne biner; hafifçe kaydırarak ekle
+    const sameCategoryCount = builder.items.filter(i=>i.category===w.category).length;
+    const newItem = { id:uid(), wardrobeId:w.id, name:w.name, img:w.img, aspect:w.aspect, category:w.category,
+      xPct: clamp(50 + sameCategoryCount*4, 20, 80), yPct: pos.yPct, widthPct: pos.widthPct,
+      scale:1, rotation:0, z: zCounter + pos.z };
+    zCounter += 5;
+    builder.items.push(newItem);
+    builder.selectedItemId = newItem.id;
+    renderCanvasItems();
+    renderItemToolbar();
+  });
+
+  const canvasEl = document.getElementById('builder-canvas');
+  canvasEl.addEventListener('pointerdown', e=>{
+    if(e.target===canvasEl || e.target.classList.contains('bg-photo')){
+      builder.selectedItemId = null;
+      renderCanvasItems();
+      renderItemToolbar();
+    }
+  });
+
+  renderCanvasItems();
+  renderItemToolbar();
+}
+
+function renderItemToolbar(){
+  const box = document.getElementById('item-toolbar');
+  if(!box) return;
+  if(!builder.selectedItemId){ box.innerHTML=''; return; }
+  box.innerHTML = `
+    <div class="icon-btn" id="bring-front" title="Öne getir">
+      <svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+    </div>
+    <div class="icon-btn" id="delete-item" title="Sil">
+      <svg viewBox="0 0 24 24" stroke="#A6432F"><path d="M5 7h14M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-9 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13"/></svg>
+    </div>`;
+  document.getElementById('bring-front').addEventListener('click', ()=>{
+    const it = builder.items.find(i=>i.id===builder.selectedItemId);
+    if(it){ it.z = ++zCounter; updateItemStyle(it); }
+  });
+  document.getElementById('delete-item').addEventListener('click', ()=>{
+    builder.items = builder.items.filter(i=>i.id!==builder.selectedItemId);
+    builder.selectedItemId = null;
+    renderCanvasItems();
+    renderItemToolbar();
+  });
+}
+
+function renderCanvasItems(){
+  const canvasEl = document.getElementById('builder-canvas');
+  if(!canvasEl) return;
+  canvasEl.querySelectorAll('.placed-item').forEach(n=>n.remove());
+  builder.items.forEach(item=>{
+    const div = document.createElement('div');
+    div.className = 'placed-item' + (item.id===builder.selectedItemId ? ' selected' : '');
+    div.dataset.id = item.id;
+    div.innerHTML = `<img src="${item.img}" draggable="false"><div class="frame"></div><div class="handle"></div>`;
+    canvasEl.appendChild(div);
+    applyItemStyle(div, item);
+
+    div.addEventListener('pointerdown', e=>{
+      if(e.target.classList.contains('handle')) return;
+      e.stopPropagation();
+      builder.selectedItemId = item.id;
+      renderCanvasItems();
+      renderItemToolbar();
+      startDrag(e, item, canvasEl);
+    });
+    div.querySelector('.handle').addEventListener('pointerdown', e=>{
+      e.stopPropagation();
+      startResizeRotate(e, item, canvasEl);
+    });
+  });
+}
+function applyItemStyle(div, item){
+  div.style.left = item.xPct+'%';
+  div.style.top = item.yPct+'%';
+  div.style.width = (item.widthPct*item.scale)+'%';
+  div.style.transform = `translate(-50%,-50%) rotate(${item.rotation}deg)`;
+  div.style.zIndex = item.z;
+}
+function updateItemStyle(item){
+  const div = document.querySelector(`.placed-item[data-id="${item.id}"]`);
+  if(div) applyItemStyle(div, item);
+}
+function startDrag(e, item, canvasEl){
+  const rect = canvasEl.getBoundingClientRect();
+  const startX = e.clientX, startY = e.clientY;
+  const startXPct = item.xPct, startYPct = item.yPct;
+  function move(ev){
+    const dx = ev.clientX-startX, dy = ev.clientY-startY;
+    item.xPct = clamp(startXPct + dx/rect.width*100, -15, 115);
+    item.yPct = clamp(startYPct + dy/rect.height*100, -15, 115);
+    updateItemStyle(item);
+  }
+  function up(){ document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up); }
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerup', up);
+}
+function startResizeRotate(e, item, canvasEl){
+  const rect = canvasEl.getBoundingClientRect();
+  const cx = rect.left + item.xPct/100*rect.width;
+  const cy = rect.top + item.yPct/100*rect.height;
+  const startDist = Math.hypot(e.clientX-cx, e.clientY-cy) || 1;
+  const startAngle = Math.atan2(e.clientY-cy, e.clientX-cx)*180/Math.PI;
+  const startScale = item.scale, startRot = item.rotation;
+  function move(ev){
+    const dist = Math.hypot(ev.clientX-cx, ev.clientY-cy);
+    const angle = Math.atan2(ev.clientY-cy, ev.clientX-cx)*180/Math.PI;
+    item.scale = clamp(startScale * (dist/startDist), 0.3, 3.5);
+    item.rotation = startRot + (angle-startAngle);
+    updateItemStyle(item);
+  }
+  function up(){ document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up); }
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerup', up);
+}
+
+/* ================= AI VIRTUAL TRY-ON ================= */
+function getTryOnApiBase(){
+  const saved = localStorage.getItem('tryonApiBase');
+  if(saved) return saved.replace(/\/+$/,'');
+  if(location.protocol === 'http:' || location.protocol === 'https:') return location.origin;
+  return '';
+}
+
+function setTryOnApiBase(){
+  const current = localStorage.getItem('tryonApiBase') || '';
+  const value = prompt(
+    'AI sunucusunun adresini yazın.\nÖrnek: https://senin-sunucun.com\n\nBilgisayarda yerel çalışıyorsa: http://localhost:3000',
+    current
+  );
+  if(value === null) return;
+  const cleaned = value.trim().replace(/\/+$/,'');
+  if(cleaned) localStorage.setItem('tryonApiBase', cleaned);
+  else localStorage.removeItem('tryonApiBase');
+  showToast(cleaned ? 'AI sunucu adresi kaydedildi ✓' : 'AI sunucu adresi silindi');
+}
+
+async function runAITryOn(){
+  if(!builder.profileImg){ showToast('Önce manken fotoğrafını seç'); return; }
+  if(!builder.items.length){ showToast('Önce en az bir parça ekle'); return; }
+
+  const apiBase = getTryOnApiBase();
+  if(!apiBase){
+    const go = confirm(
+      'AI sunucusuna bağlanılamadı.\n\n' +
+      'Bu HTML dosyasını telefonda doğrudan açmışsın. ' +
+      'AI giydirmenin çalışması için server.js çalışan bir sunucu gerekir.\n\n' +
+      'Şimdi sunucu adresini girmek ister misin?'
+    );
+    if(go) setTryOnApiBase();
+    return;
+  }
+
+  const btn = document.getElementById('builder-ai');
+  if(!btn) return;
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  btn.textContent = '✨ AI hazırlanıyor…';
+
+  try{
+    const health = await fetch(`${apiBase}/api/health`, {cache:'no-store'});
+    if(!health.ok) throw new Error(`AI sunucusu erişilebilir değil (${health.status})`);
+  }catch(err){
+    console.error(err);
+    showToast('AI sunucusuna ulaşılamadı. Sunucu adresini kontrol et.');
+    btn.disabled = false;
+    btn.textContent = oldText;
+    return;
+  }
+
+  try{
+    const items = [...builder.items].sort((a,b)=>a.z-b.z);
+    let modelImage = builder.profileImg;
+
+    for(let i=0;i<items.length;i++){
+      const it = items[i];
+      btn.textContent = `✨ AI giydiriyor ${i+1}/${items.length}…`;
+
+      const r = await fetch(`${apiBase}/api/tryon`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          modelImage,
+          productImage:it.img,
+          category:it.category,
+          itemName:it.name
+        })
+      });
+
+      const text = await r.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch(_){}
+
+      if(!r.ok) throw new Error(data.error || `Sunucu hatası (${r.status})`);
+      if(!data.image) throw new Error('AI görüntü döndürmedi.');
+      modelImage = data.image;
+    }
+
+    builder.profileImg = modelImage;
+    builder.items = [];
+    builder.selectedItemId = null;
+    renderBuilder();
+    showToast('AI kombin hazırlandı ✓');
+  }catch(err){
+    console.error(err);
+    showToast('AI giydirme başarısız: '+err.message);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+/* ---- compositing ---- */
+async function renderComposite(profileImg, items, outW, outH){
+  const canvas = document.getElementById('composite-canvas');
+  canvas.width = outW; canvas.height = outH;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#EFE8DA';
+  ctx.fillRect(0,0,outW,outH);
+  if(profileImg){
+    const img = await loadImage(profileImg);
+    const scale = Math.min(outW/img.width, outH/img.height);
+    const dw = img.width*scale, dh = img.height*scale;
+    ctx.drawImage(img, (outW-dw)/2, (outH-dh)/2, dw, dh);
+  }
+  const sorted = [...items].sort((a,b)=>a.z-b.z);
+  for(const it of sorted){
+    const img = await loadImage(it.img);
+    const w = (it.widthPct/100)*outW*it.scale;
+    const h = w/it.aspect;
+    const cx = (it.xPct/100)*outW, cy = (it.yPct/100)*outH;
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(it.rotation*Math.PI/180);
+    ctx.drawImage(img, -w/2, -h/2, w, h);
+    ctx.restore();
+  }
+  return canvas.toDataURL('image/jpeg', 0.78);
+}
+
+function openSaveOutfitSheet(){
+  if(builder.items.length===0){ showToast('Önce en az bir parça ekle'); return; }
+  const existing = outfits.find(o=>o.id===builder.editingOutfitId);
+  openSheet(`
+    <h3 class="serif">Kombini kaydet</h3>
+    <div class="field-label">Adı</div>
+    <input type="text" id="outfit-name-input" value="${existing?escapeHtml(existing.name):''}" placeholder="Örn. Pazar günü">
+    <div class="btn-row">
+      <button class="btn secondary" id="cancel-outfit">Vazgeç</button>
+      <button class="btn gold" id="confirm-outfit">Kaydet</button>
+    </div>
+  `);
+  document.getElementById('cancel-outfit').addEventListener('click', closeSheet);
+  document.getElementById('confirm-outfit').addEventListener('click', async ()=>{
+    const name = document.getElementById('outfit-name-input').value.trim() || 'İsimsiz kombin';
+    closeSheet();
+    showToast('Kombin oluşturuluyor…');
+    const thumb = await renderComposite(builder.profileImg, builder.items, 720, 960);
+    const record = {
+      id: builder.editingOutfitId || uid(),
+      name,
+      profileImg: builder.profileImg,
+      items: JSON.parse(JSON.stringify(builder.items)),
+      thumb,
+      createdAt: builder.editingOutfitId ? (existing?existing.createdAt:Date.now()) : Date.now()
+    };
+    if(builder.editingOutfitId){
+      outfits = outfits.map(o=>o.id===record.id?record:o);
+    } else {
+      outfits.push(record);
+    }
+    await storeSet('outfits', outfits);
+    builder = { profileImg: builder.profileImg, items:[], editingOutfitId:null, selectedItemId:null };
+    showToast('Kombin kaydedildi');
+    showView('saved');
+  });
+}
+
+/* ================= SAVED ================= */
+function renderSaved(){
+  const el = document.getElementById('saved-content');
+  if(outfits.length===0){
+    el.innerHTML = `<div class="empty-state">
+      <p>Henüz kaydedilmiş bir kombinin yok.<br>Kombin sekmesinden ilkini oluştur.</p>
+      <button class="btn gold" onclick="showView('builder')">Kombin oluştur</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML = `<div class="saved-grid">${
+    [...outfits].sort((a,b)=>b.createdAt-a.createdAt).map(o=>`
+      <div class="tag-card saved-card" data-open-outfit="${o.id}">
+        <div class="tag-hole"></div>
+        <img src="${o.thumb}">
+        <div class="name">${escapeHtml(o.name)}</div>
+        <div class="date">${fmtDate(o.createdAt)}</div>
+      </div>`).join('')
+  }</div>`;
+  el.querySelectorAll('[data-open-outfit]').forEach(c=>{
+    c.addEventListener('click', ()=>openOutfitDetail(c.dataset.openOutfit));
+  });
+}
+function openOutfitDetail(id){
+  const o = outfits.find(x=>x.id===id);
+  if(!o) return;
+  openSheet(`
+    <div id="saved-detail">
+      <h3 class="serif">${escapeHtml(o.name)}</h3>
+      <img src="${o.thumb}">
+      <div class="btn-row">
+        <button class="btn danger" id="del-outfit">Sil</button>
+        <button class="btn secondary" id="close-detail">Kapat</button>
+        <button class="btn gold" id="edit-outfit">Düzenle</button>
+      </div>
+    </div>
+  `);
+  document.getElementById('close-detail').addEventListener('click', closeSheet);
+  document.getElementById('del-outfit').addEventListener('click', async ()=>{
+    if(!confirm('Bu kombini silmek istiyor musun?')) return;
+    outfits = outfits.filter(x=>x.id!==id);
+    await storeSet('outfits', outfits);
+    closeSheet();
+    renderSaved();
+  });
+  document.getElementById('edit-outfit').addEventListener('click', ()=>{
+    builder = {
+      profileImg: o.profileImg,
+      items: JSON.parse(JSON.stringify(o.items)),
+      editingOutfitId: o.id,
+      selectedItemId: null
+    };
+    zCounter = Math.max(1, ...o.items.map(i=>i.z)) + 1;
+    closeSheet();
+    showView('builder');
+  });
+}
+
+/* ---------------- init ---------------- */
+(async function init(){
+  await loadAll();
+  showView('wardrobe');
+})();
+</script>
+</body>
+</html>
