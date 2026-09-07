@@ -1,0 +1,9 @@
+{
+  "name": "kombin-defteri-ai",
+  "version": "3.0.0",
+  "private": true,
+  "dependencies": {
+    "@gradio/client": "^2.5.1",
+    "express": "^5.1.0"
+  }
+}
