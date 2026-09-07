@@ -1,9 +1,12 @@
 {
   "name": "kombin-defteri-ai",
-  "version": "3.0.0",
+  "version": "6.0.0",
   "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "@gradio/client": "^2.5.1",
-    "express": "^5.1.0"
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
   }
 }
