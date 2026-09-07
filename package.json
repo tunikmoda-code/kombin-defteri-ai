@@ -1,0 +1,12 @@
+{
+  "name": "kombin-defteri-ai",
+  "version": "6.0.0",
+  "private": true,
+  "dependencies": {
+    "@gradio/client": "^2.5.1",
+    "express": "^5.1.0"
+  },
+  "scripts": {
+    "start": "node sunucu-v6.js"
+  }
+}
